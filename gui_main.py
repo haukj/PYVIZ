@@ -5,8 +5,8 @@ import sys
 from pathlib import Path
 import os
 
-# Fixing relative import issue by dynamically adding the parent directory to sys.path.
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Fixing relative import issue by ensuring the project root is on sys.path.
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from parser import parse_file  # Reverted to relative import
 from graph_model import Graph, Edge  # Reverted to relative import
@@ -60,6 +60,7 @@ class NodeCanvas(tk.Canvas):
                 for connection in group.connections:
                     self._draw_edge(connection)
             print("Finished loading summary view.")
+            self.auto_pan_zoom()
             return
 
         batch_size = 100  # Render nodes and edges in batches
@@ -79,6 +80,8 @@ class NodeCanvas(tk.Canvas):
             self.update_idletasks()  # Update canvas incrementally
 
         print("Finished loading graph.")
+        # Recalculate view to ensure graph is visible
+        self.auto_pan_zoom()
 
     def toggle_group(self, group_node):
         """Toggle visibility of a group node's children with lazy loading."""

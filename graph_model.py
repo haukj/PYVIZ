@@ -111,3 +111,6 @@ class Graph:
                     if node_a != node_b and abs(node_a.x - node_b.x) < node_a.width and abs(node_a.y - node_b.y) < node_a.height:
                         node_a.x += 10
                         node_a.y += 10
+                        # Ensure node stays within bounds after adjustment
+                        node_a.x = max(0, min(width, node_a.x))
+                        node_a.y = max(0, min(height, node_a.y))
