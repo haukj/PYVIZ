@@ -25,7 +25,12 @@ class GroupInfo:
     children: list[NodeInfo] = field(default_factory=list)
     connections: list[EdgeInfo] = field(default_factory=list)  # Added connections attribute
 
-def parse_file(py_path: Path, parse_classes=True, parse_functions=True) -> tuple[list[NodeInfo], list[EdgeInfo], list[GroupInfo]]:
+def parse_file(
+    py_path: Path,
+    parse_classes: bool = True,
+    parse_functions: bool = True,
+    verbose: bool = False,
+) -> tuple[list[NodeInfo], list[EdgeInfo], list[GroupInfo]]:
     try:
         source = py_path.read_text(encoding="utf8")
         tree = ast.parse(source)
@@ -39,6 +44,12 @@ def parse_file(py_path: Path, parse_classes=True, parse_functions=True) -> tuple
     groups: list[GroupInfo] = []
 
     class Visitor(ast.NodeVisitor):
+        """Collect function definitions, call edges and classes."""
+
+        def __init__(self):
+            super().__init__()
+            self.func_stack: list[str] = []
+
         def visit_FunctionDef(self, node: ast.FunctionDef):
             if not parse_functions:
                 return
@@ -52,9 +63,14 @@ def parse_file(py_path: Path, parse_classes=True, parse_functions=True) -> tuple
 
             funcs[node.name] = NodeInfo(name=node.name, inputs=inputs, outputs=list(returns))
 
+            self.func_stack.append(node.name)
+            self.generic_visit(node)
+            self.func_stack.pop()
+
         def visit_Call(self, node: ast.Call):
-            if isinstance(node.func, ast.Name):
-                edges.append(EdgeInfo(caller=node.func.id, callee=node.func.id))
+            if isinstance(node.func, ast.Name) and self.func_stack:
+                edges.append(EdgeInfo(caller=self.func_stack[-1], callee=node.func.id))
+            self.generic_visit(node)
 
         def visit_ClassDef(self, node: ast.ClassDef):
             if not parse_classes:
@@ -68,8 +84,9 @@ def parse_file(py_path: Path, parse_classes=True, parse_functions=True) -> tuple
     Visitor().visit(tree)
 
     # Debugging logs
-    print(f"Parsed nodes: {funcs}")
-    print(f"Parsed edges: {edges}")
-    print(f"Parsed groups: {groups}")
+    if verbose:
+        print(f"Parsed nodes: {funcs}")
+        print(f"Parsed edges: {edges}")
+        print(f"Parsed groups: {groups}")
 
     return list(funcs.values()), edges, groups
