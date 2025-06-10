@@ -5,8 +5,8 @@ import sys
 from pathlib import Path
 import os
 
-# Fixing relative import issue by dynamically adding the parent directory to sys.path.
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Fixing relative import issue by ensuring the project root is on sys.path.
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from parser import parse_file  # Reverted to relative import
 from graph_model import Graph, Edge  # Reverted to relative import
