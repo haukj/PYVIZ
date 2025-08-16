@@ -60,6 +60,7 @@ class NodeCanvas(tk.Canvas):
                 for connection in group.connections:
                     self._draw_edge(connection)
             print("Finished loading summary view.")
+            self.auto_pan_zoom()
             return
 
         batch_size = 100  # Render nodes and edges in batches
@@ -79,6 +80,8 @@ class NodeCanvas(tk.Canvas):
             self.update_idletasks()  # Update canvas incrementally
 
         print("Finished loading graph.")
+        # Recalculate view to ensure graph is visible
+        self.auto_pan_zoom()
 
     def toggle_group(self, group_node):
         """Toggle visibility of a group node's children with lazy loading."""
